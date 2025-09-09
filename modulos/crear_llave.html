@@ -1,0 +1,47 @@
+<h2>Crear nueva llave (.easySQL)</h2>
+<form id="crearLlaveForm">
+  <fieldset>
+    <legend>Información de la base de datos</legend>
+    <label>Nombre de la base de datos:<br>
+      <input type="text" id="nombreBD" required>
+    </label><br>
+    <label>Descripción:<br>
+      <textarea id="descripcionBD" rows="2" required></textarea>
+    </label>
+  </fieldset>
+  <br>
+  <fieldset>
+    <legend>Credenciales Supabase</legend>
+    <label>Project URL:<br>
+      <input type="text" id="supabaseUrl" required>
+    </label><br>
+    <label>API Key:<br>
+      <input type="text" id="supabaseKey" required>
+    </label>
+  </fieldset>
+  <br>
+  <fieldset>
+    <legend>API Gemini (IA)</legend>
+    <label>API Key Gemini:<br>
+      <input type="text" id="apiGemini" required>
+    </label>
+  </fieldset>
+  <br>
+  <fieldset>
+    <legend>Usuarios y roles</legend>
+    <div id="usuariosContainer"></div>
+    <button type="button" id="addUsuarioBtn">Añadir usuario</button>
+  </fieldset>
+  <br>
+  <fieldset>
+    <legend>Clave de cifrado</legend>
+    <label>Introduce una clave fuerte para cifrar el archivo:<br>
+      <input type="password" id="claveCifrado" required minlength="12" autocomplete="new-password">
+    </label>
+    <div id="passwordStrength"></div>
+    <small>Debe tener al menos 12 caracteres, mayúsculas, minúsculas, números y símbolos.</small>
+  </fieldset>
+  <br>
+  <button type="submit">Generar y descargar archivo .easySQL</button>
+</form>
+<div id="progresoLlave"></div>

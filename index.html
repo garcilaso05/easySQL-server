@@ -9,7 +9,6 @@
     nav { display: flex; gap: 10px; margin-top: 5px; }
     nav button { background: #555; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
     nav button:hover { background: #777; }
-    #credentials { background: #f4f4f4; padding: 10px; border-bottom: 1px solid #ddd; }
     #content { padding: 20px; }
   </style>
   <script type="module">
@@ -28,17 +27,9 @@
       }
     }
 
-    // Guardar credenciales globalmente
-    window.getSupabaseCreds = function () {
-      return {
-        url: document.getElementById("supabaseUrl").value.trim(),
-        key: document.getElementById("supabaseKey").value.trim()
-      };
-    };
-
-    // Cargar por defecto el primer módulo
+    // Cargar por defecto el módulo de bienvenida
     window.addEventListener("DOMContentLoaded", () => {
-      loadModule("modulos/crear_tabla.html", "modulos/crear_tabla.js");
+      loadModule("modulos/bienvenida.html", "modulos/bienvenida.js");
     });
 
     window.loadModule = loadModule;
@@ -48,17 +39,11 @@
   <header>
     <h1>Gestor SQL Supabase</h1>
     <nav>
-      <button onclick="loadModule('modulos/crear_tabla.html','modulos/crear_tabla.js')">Crear Tablas</button>
-      <button onclick="loadModule('modulos/inserciones.html','modulos/inserciones.js')">Inserciones</button>
+      <button onclick="loadModule('modulos/bienvenida.html','modulos/bienvenida.js')">Bienvenida</button>
+      <button onclick="loadModule('modulos/subir_archivo.html','modulos/subir_archivo.js')">Subir archivo (.easySQL)</button>
+      <button onclick="loadModule('modulos/crear_llave.html','modulos/crear_llave.js')">Crear nueva llave (.easySQL)</button>
     </nav>
   </header>
-
-  <section id="credentials">
-    <h3>Credenciales Supabase</h3>
-    <input type="text" id="supabaseUrl" placeholder="SUPABASE_URL" size="50"><br>
-    <input type="text" id="supabaseKey" placeholder="SUPABASE_KEY" size="50"><br>
-  </section>
-
   <main id="content"></main>
 </body>
 </html>

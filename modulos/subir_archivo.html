@@ -1,0 +1,26 @@
+<h2>Acceso con archivo .easySQL</h2>
+<div id="subirArchivoBox">
+  <form id="formArchivo">
+    <label>Selecciona tu archivo .easySQL:<br>
+      <input type="file" id="archivoEasySQL" accept=".easySQL" required>
+    </label><br><br>
+    <label>Introduce la clave de cifrado:<br>
+      <input type="password" id="claveDesencriptar" required autocomplete="current-password">
+    </label><br><br>
+    <button type="submit">Desencriptar y acceder</button>
+  </form>
+  <div id="progresoArchivo"></div>
+</div>
+<div id="loginBox" style="display:none">
+  <h3>Identificación de usuario</h3>
+  <form id="formLogin">
+    <label>Usuario:<br>
+      <input type="text" id="loginUsuario" required>
+    </label><br>
+    <label>Contraseña:<br>
+      <input type="password" id="loginPass" required autocomplete="current-password">
+    </label><br><br>
+    <button type="submit">Entrar</button>
+  </form>
+  <div id="progresoLogin"></div>
+</div>

@@ -31,10 +31,15 @@ function addColumn() {
     <label><input type="checkbox" class="notNull"> NOT NULL</label>
     <label><input type="checkbox" class="unique"> UNIQUE</label>
     <label><input type="radio" name="primaryKey" class="primary"> PRIMARY KEY</label>
-    <button onclick="this.parentElement.remove()">❌</button>
+    <button type="button" class="removeColBtn">❌</button>
   `;
 
   container.appendChild(div);
+
+  // Listener para eliminar columna
+  div.querySelector('.removeColBtn').onclick = function() {
+    div.remove();
+  };
 }
 
 async function createTable() {
@@ -85,5 +90,13 @@ async function createTable() {
   }
 }
 
-document.getElementById("addColumnBtn").onclick = addColumn;
-document.getElementById("createTableBtn").onclick = createTable;
+// Asignar listeners tras cargar el módulo
+function setupCrearTablaListeners() {
+  const addBtn = document.getElementById("addColumnBtn");
+  if (addBtn) addBtn.onclick = addColumn;
+  const createBtn = document.getElementById("createTableBtn");
+  if (createBtn) createBtn.onclick = createTable;
+}
+
+// Ejecutar setup al cargar el módulo
+setupCrearTablaListeners();
