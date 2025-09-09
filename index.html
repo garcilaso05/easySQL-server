@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestor SQL Supabase</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; }
+    header { background: #333; color: white; padding: 10px; }
+    nav { display: flex; gap: 10px; margin-top: 5px; }
+    nav button { background: #555; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
+    nav button:hover { background: #777; }
+    #credentials { background: #f4f4f4; padding: 10px; border-bottom: 1px solid #ddd; }
+    #content { padding: 20px; }
+  </style>
+  <script type="module">
+    async function loadModule(moduleHtml, moduleScript) {
+      // Cargar el HTML
+      const res = await fetch(moduleHtml);
+      const html = await res.text();
+      document.getElementById("content").innerHTML = html;
+
+      // Cargar el script del módulo
+      if (moduleScript) {
+        const script = document.createElement("script");
+        script.type = "module";
+        script.src = moduleScript;
+        document.body.appendChild(script);
+      }
+    }
+
+    // Guardar credenciales globalmente
+    window.getSupabaseCreds = function () {
+      return {
+        url: document.getElementById("supabaseUrl").value.trim(),
+        key: document.getElementById("supabaseKey").value.trim()
+      };
+    };
+
+    // Cargar por defecto el primer módulo
+    window.addEventListener("DOMContentLoaded", () => {
+      loadModule("modulos/crear_tabla.html", "modulos/crear_tabla.js");
+    });
+
+    window.loadModule = loadModule;
+  </script>
+</head>
+<body>
+  <header>
+    <h1>Gestor SQL Supabase</h1>
+    <nav>
+      <button onclick="loadModule('modulos/crear_tabla.html','modulos/crear_tabla.js')">Crear Tablas</button>
+      <button onclick="loadModule('modulos/inserciones.html','modulos/inserciones.js')">Inserciones</button>
+    </nav>
+  </header>
+
+  <section id="credentials">
+    <h3>Credenciales Supabase</h3>
+    <input type="text" id="supabaseUrl" placeholder="SUPABASE_URL" size="50"><br>
+    <input type="text" id="supabaseKey" placeholder="SUPABASE_KEY" size="50"><br>
+  </section>
+
+  <main id="content"></main>
+</body>
+</html>
