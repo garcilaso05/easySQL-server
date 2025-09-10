@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
+import { sanitizeIdentifier } from "./seguridad.js";
 
 // Usar una sola instancia global de supabase
 function getSupabaseInstance() {
@@ -68,48 +69,59 @@ async function createTable() {
   const supabase = getSupabaseInstance();
   if (!supabase) return;
 
-  const tableName = document.getElementById("tableName").value.trim();
-  if (!tableName) {
-    alert("Introduce un nombre de tabla");
-    return;
-  }
-
-  const colDefs = [];
-  let hasPrimary = false;
-
-  document.querySelectorAll(".colDef").forEach(div => {
-    let name = div.querySelector(".colName").value.trim().toUpperCase();
-    if (!name) return;
-    name = name.replace(/\s+/g, "_");
-
-    let type = div.querySelector(".colType").value;
-    let notNull = div.querySelector(".notNull").checked ? " NOT NULL" : "";
-    let unique = div.querySelector(".unique").checked ? " UNIQUE" : "";
-    let primary = div.querySelector(".primary").checked;
-    if (primary) {
-      hasPrimary = true;
-      primary = " PRIMARY KEY";
-    } else {
-      primary = "";
+  try {
+    const rawTableName = document.getElementById("tableName").value.trim().toUpperCase().replace(/\s+/g, "_");
+    const tableName = sanitizeIdentifier(rawTableName);
+    if (!tableName) {
+      alert("Introduce un nombre de tabla válido.");
+      return;
     }
 
-    colDefs.push(`${name} ${type}${notNull}${unique}${primary}`);
-  });
+    const colDefs = [];
+    let hasPrimary = false;
 
-  if (!hasPrimary) {
-    alert("Debes marcar una columna como PRIMARY KEY");
-    return;
-  }
+    const colElements = document.querySelectorAll(".colDef");
+    for (const div of colElements) {
+      let rawName = div.querySelector(".colName").value.trim().toUpperCase().replace(/\s+/g, "_");
+      if (!rawName) continue;
+      let name = sanitizeIdentifier(rawName);
 
-  const sql = `CREATE TABLE ${tableName.toUpperCase()} (${colDefs.join(", ")});`;
-  document.getElementById("preview").textContent = sql;
+      let type = div.querySelector(".colType").value; // Safe (from select)
+      let notNull = div.querySelector(".notNull").checked ? " NOT NULL" : "";
+      let unique = div.querySelector(".unique").checked ? " UNIQUE" : "";
+      let primary = div.querySelector(".primary").checked;
+      if (primary) {
+        hasPrimary = true;
+        primary = " PRIMARY KEY";
+      } else {
+        primary = "";
+      }
 
-  const { error } = await supabase.rpc("exec_create_table", { query: sql });
+      colDefs.push(`${name} ${type}${notNull}${unique}${primary}`);
+    }
 
-  if (error) {
-    alert("Error creando tabla: " + error.message);
-  } else {
-    alert("Tabla creada con éxito ✅");
+    if (colDefs.length === 0) {
+      alert("Debes definir al menos una columna.");
+      return;
+    }
+
+    if (!hasPrimary) {
+      alert("Debes marcar una columna como PRIMARY KEY");
+      return;
+    }
+
+    const sql = `CREATE TABLE ${tableName} (${colDefs.join(", ")});`;
+    document.getElementById("preview").textContent = sql;
+
+    const { error } = await supabase.rpc("exec_create_table", { query: sql });
+
+    if (error) {
+      alert("Error creando tabla: " + error.message);
+    } else {
+      alert("Tabla creada con éxito ✅");
+    }
+  } catch (err) {
+    alert("Error: " + err.message);
   }
 }
 

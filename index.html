@@ -9,6 +9,7 @@
     nav { display: flex; gap: 10px; margin-top: 5px; }
     nav button { background: #555; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
     nav button:hover { background: #777; }
+    .nav-right { margin-left: auto; display: flex; gap: 10px; }
     #content { padding: 20px; }
   </style>
   <script type="module">
@@ -55,8 +56,10 @@
     <h1>Gestor SQL Supabase</h1>
     <nav>
       <button onclick="loadModule('modulos/bienvenida.html','modulos/bienvenida.js')">Bienvenida</button>
-      <button onclick="loadModule('modulos/subir_archivo.html','modulos/subir_archivo.js')">Subir archivo (.easySQL)</button>
-      <button onclick="loadModule('modulos/crear_llave.html','modulos/crear_llave.js')">Crear nueva llave (.easySQL)</button>
+      <div class="nav-right">
+        <button onclick="loadModule('modulos/subir_archivo.html','modulos/subir_archivo.js')">Acceder</button>
+        <button onclick="loadModule('modulos/crear_llave.html','modulos/crear_llave.js')">Registarse</button>
+      </div>
     </nav>
   </header>
   <main id="content"></main>

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
+import { sanitizeIdentifier, escapeSqlValue } from "./seguridad.js";
 
 // Usar una sola instancia global de supabase
 function getSupabaseInstance() {
@@ -122,12 +123,14 @@ async function cargarCamposTabla(tabla) {
 async function insertRow() {
   const supabase = getSupabaseInstance();
   if (!supabase) return;
+
   const select = document.getElementById("insertTableSelect");
   const tableName = select.value;
   if (!tableName) {
     alert("Selecciona una tabla");
     return;
   }
+
   const container = document.getElementById("insertFormContainer");
   const inputs = container.querySelectorAll('.fieldValue');
   const row = {};
@@ -144,19 +147,29 @@ async function insertRow() {
     }
     row[input.name] = value;
   });
-  // Generar SQL de referencia
-  const columns = Object.keys(row).map(k => k.toUpperCase());
-  const values = Object.values(row).map(v =>
-    typeof v === "string" ? `'${v}'` : v
-  );
-  const sql = `INSERT INTO ${tableName.toUpperCase()} (${columns.join(", ")}) VALUES (${values.join(", ")});`;
-  document.getElementById("insertPreview").textContent = sql;
-  // Ejecutar inserción en Supabase
-  const { error } = await supabase.from(tableName).insert([row]);
-  if (error) {
-    alert("Error insertando fila: " + error.message);
-  } else {
-    alert("Fila insertada con éxito ✅");
+
+  try {
+    // Generar SQL de referencia (saneado)
+    const sanitizedTableName = sanitizeIdentifier(tableName);
+    const columns = Object.keys(row).map(k => sanitizeIdentifier(k));
+    const values = Object.values(row).map(v => {
+        if (v === null) return 'NULL';
+        if (typeof v === 'string') return escapeSqlValue(v);
+        return v; // for numbers and booleans
+    });
+
+    const sql = `INSERT INTO ${sanitizedTableName} (${columns.join(", ")}) VALUES (${values.join(", ")});`;
+    document.getElementById("insertPreview").textContent = sql;
+
+    // Ejecutar inserción en Supabase (ya es seguro)
+    const { error } = await supabase.from(tableName).insert([row]);
+    if (error) {
+      alert("Error insertando fila: " + error.message);
+    } else {
+      alert("Fila insertada con éxito ✅");
+    }
+  } catch (err) {
+    alert("Error: " + err.message);
   }
 }
 

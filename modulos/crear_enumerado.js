@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
+import { sanitizeIdentifier, escapeSqlValue } from "./seguridad.js";
 
 // Usar una sola instancia global de supabase
 function getSupabaseInstance() {
@@ -32,21 +33,28 @@ document.getElementById("formCrearEnum").onsubmit = async function(e) {
   if (!supabase) return;
   const status = document.getElementById("enumStatus");
   status.textContent = "Creando enumerado...";
-  const name = document.getElementById("enumName").value.trim();
-  const elements = Array.from(document.querySelectorAll('.enumElement'))
-    .map(el => el.value.trim())
-    .filter(v => v);
-  if (!name || elements.length === 0) {
-    status.textContent = "Debes indicar un nombre y al menos un elemento.";
-    return;
-  }
-  // Generar SQL ENUM
-  const sql = `CREATE TYPE ${name} AS ENUM (${elements.map(e => `'${e.replace(/'/g, "''")}'`).join(', ')});`;
-  // Ejecutar en Supabase (requiere función RPC exec_create_enum)
-  const { error } = await supabase.rpc("exec_create_enum", { query: sql });
-  if (error) {
-    status.textContent = "Error creando enumerado: " + error.message;
-  } else {
-    status.textContent = "Enumerado creado con éxito ✅";
+
+  try {
+    const name = sanitizeIdentifier(document.getElementById("enumName").value.trim());
+    const elements = Array.from(document.querySelectorAll('.enumElement'))
+      .map(el => el.value.trim())
+      .filter(v => v);
+
+    if (!name || elements.length === 0) {
+      status.textContent = "Debes indicar un nombre y al menos un elemento.";
+      return;
+    }
+
+    const sql = `CREATE TYPE ${name} AS ENUM (${elements.map(escapeSqlValue).join(', ')});`;
+    
+    const { error } = await supabase.rpc("exec_create_enum", { query: sql });
+
+    if (error) {
+      status.textContent = "Error creando enumerado: " + error.message;
+    } else {
+      status.textContent = "Enumerado creado con éxito ✅";
+    }
+  } catch (err) {
+    status.textContent = "Error: " + err.message;
   }
 };
