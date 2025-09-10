@@ -1,49 +1,72 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
-let supabase = null;
-
-function initSupabase() {
-  const { url, key } = window.getSupabaseCreds();
-  if (!url || !key) {
-    alert("Introduce credenciales de Supabase");
-    return null;
+// Usar una sola instancia global de supabase
+function getSupabaseInstance() {
+  if (!window._supabaseInstance) {
+    const { url, key } = window.getSupabaseCreds();
+    if (!url || !key) {
+      alert("Introduce credenciales de Supabase");
+      return null;
+    }
+    window._supabaseInstance = createClient(url, key);
   }
-  supabase = createClient(url, key);
-  return supabase;
+  return window._supabaseInstance;
 }
 
 function addColumn() {
   const container = document.getElementById("columns");
+  // Consultar enumerados en Supabase
+  cargarEnumerados().then(enumTypes => {
+    const div = document.createElement("div");
+    div.className = "colDef";
+    div.innerHTML = `
+      <input type="text" placeholder="NOMBRE_COLUMNA" class="colName" />
+      <select class="colType"></select>
+      <label><input type="checkbox" class="notNull"> NOT NULL</label>
+      <label><input type="checkbox" class="unique"> UNIQUE</label>
+      <label><input type="radio" name="primaryKey" class="primary"> PRIMARY KEY</label>
+      <button type="button" class="removeColBtn">❌</button>
+    `;
+    // Rellenar tipos
+    const select = div.querySelector('.colType');
+    [
+      { value: "INT", label: "Entero" },
+      { value: "DECIMAL", label: "Número con decimales" },
+      { value: "VARCHAR(25)", label: "Texto corto (25)" },
+      { value: "VARCHAR(50)", label: "Texto medio (50)" },
+      { value: "VARCHAR(255)", label: "Texto grande (255)" },
+      { value: "BOOLEAN", label: "Booleano" }
+    ].forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt.value;
+      o.textContent = opt.label;
+      select.appendChild(o);
+    });
+    // Añadir enumerados
+    enumTypes.forEach(enumName => {
+      const o = document.createElement('option');
+      o.value = enumName;
+      o.textContent = `ENUM: ${enumName}`;
+      select.appendChild(o);
+    });
+    container.appendChild(div);
+    div.querySelector('.removeColBtn').onclick = function() { div.remove(); };
+  });
+}
 
-  const div = document.createElement("div");
-  div.className = "colDef";
-
-  div.innerHTML = `
-    <input type="text" placeholder="NOMBRE_COLUMNA" class="colName" />
-    <select class="colType">
-      <option value="INT">Entero</option>
-      <option value="DECIMAL">Número con decimales</option>
-      <option value="VARCHAR(25)">Texto corto (25)</option>
-      <option value="VARCHAR(50)">Texto medio (50)</option>
-      <option value="VARCHAR(255)">Texto grande (255)</option>
-      <option value="BOOLEAN">Booleano</option>
-    </select>
-    <label><input type="checkbox" class="notNull"> NOT NULL</label>
-    <label><input type="checkbox" class="unique"> UNIQUE</label>
-    <label><input type="radio" name="primaryKey" class="primary"> PRIMARY KEY</label>
-    <button type="button" class="removeColBtn">❌</button>
-  `;
-
-  container.appendChild(div);
-
-  // Listener para eliminar columna
-  div.querySelector('.removeColBtn').onclick = function() {
-    div.remove();
-  };
+// Consultar enumerados existentes en Supabase
+async function cargarEnumerados() {
+  const supabase = getSupabaseInstance();
+  if (!supabase) return [];
+  // Consulta los tipos ENUM
+  const { data, error } = await supabase.rpc('get_enum_types');
+  if (error || !data) return [];
+  return data.map(row => row.enum_name);
 }
 
 async function createTable() {
-  if (!initSupabase()) return;
+  const supabase = getSupabaseInstance();
+  if (!supabase) return;
 
   const tableName = document.getElementById("tableName").value.trim();
   if (!tableName) {
@@ -98,5 +121,5 @@ function setupCrearTablaListeners() {
   if (createBtn) createBtn.onclick = createTable;
 }
 
-// Ejecutar setup al cargar el módulo
+// Ejecutar setup al cargar el módulo y refrescar enumerados
 setupCrearTablaListeners();

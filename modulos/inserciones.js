@@ -1,20 +1,40 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
-let supabase = null;
-
-function initSupabase() {
-  const { url, key } = window.getSupabaseCreds();
-  if (!url || !key) {
-    alert("Introduce credenciales de Supabase");
-    return null;
+// Usar una sola instancia global de supabase
+function getSupabaseInstance() {
+  if (!window._supabaseInstance) {
+    const { url, key } = window.getSupabaseCreds();
+    if (!url || !key) {
+      alert("Introduce credenciales de Supabase");
+      return null;
+    }
+    window._supabaseInstance = createClient(url, key);
   }
-  supabase = createClient(url, key);
-  return supabase;
+  return window._supabaseInstance;
+}
+
+let enumCache = {};
+
+// Consultar enumerados y sus valores
+async function cargarEnumeradosValores() {
+  const supabase = getSupabaseInstance();
+  if (!supabase) return {};
+  const { data, error } = await supabase.rpc('get_enum_values');
+  if (error || !data) return {};
+  // Agrupar por enum_name
+  const enums = {};
+  data.forEach(row => {
+    if (!enums[row.enum_name]) enums[row.enum_name] = [];
+    enums[row.enum_name].push(row.enum_value);
+  });
+  enumCache = enums;
+  return enums;
 }
 
 // Obtener tablas al cargar el módulo usando la función RPC
 async function cargarTablas() {
-  if (!initSupabase()) return;
+  const supabase = getSupabaseInstance();
+  if (!supabase) return;
   const select = document.getElementById("insertTableSelect");
   select.innerHTML = '<option value="">Selecciona una tabla...</option>';
   const { data, error } = await supabase.rpc('get_public_tables');
@@ -32,10 +52,13 @@ async function cargarTablas() {
 
 // Obtener columnas y tipos de la tabla seleccionada usando la función RPC
 async function cargarCamposTabla(tabla) {
-  if (!initSupabase()) return;
+  const supabase = getSupabaseInstance();
+  if (!supabase) return;
   const container = document.getElementById("insertFormContainer");
   container.innerHTML = '';
   if (!tabla) return;
+  await cargarEnumeradosValores();
+  // Ahora pedimos también udt_name
   const { data, error } = await supabase.rpc('get_table_columns', { tabla });
   if (error || !data) {
     container.innerHTML = '<span style="color:red">Error obteniendo columnas</span>';
@@ -45,7 +68,18 @@ async function cargarCamposTabla(tabla) {
     let input;
     let label = document.createElement('label');
     label.textContent = col.column_name + ': ';
-    if (col.data_type === 'boolean') {
+    // ENUM: usar udt_name para detectar el tipo ENUM
+    if (col.udt_name && enumCache[col.udt_name]) {
+      input = document.createElement('select');
+      input.className = 'fieldValue';
+      input.name = col.column_name;
+      enumCache[col.udt_name].forEach(val => {
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = val;
+        input.appendChild(opt);
+      });
+    } else if (col.data_type === 'boolean') {
       input = document.createElement('input');
       input.type = 'checkbox';
       input.className = 'fieldValue';
@@ -86,7 +120,8 @@ async function cargarCamposTabla(tabla) {
 
 // Insertar fila usando los campos generados
 async function insertRow() {
-  if (!initSupabase()) return;
+  const supabase = getSupabaseInstance();
+  if (!supabase) return;
   const select = document.getElementById("insertTableSelect");
   const tableName = select.value;
   if (!tableName) {
@@ -98,7 +133,9 @@ async function insertRow() {
   const row = {};
   inputs.forEach(input => {
     let value;
-    if (input.type === 'checkbox') {
+    if (input.tagName === 'SELECT') {
+      value = input.value;
+    } else if (input.type === 'checkbox') {
       value = input.checked;
     } else if (input.type === 'number') {
       value = input.value === '' ? null : Number(input.value);
@@ -132,6 +169,11 @@ function setupInsercionesListeners() {
   const insertBtn = document.getElementById("insertRowBtn");
   if (insertBtn) insertBtn.onclick = insertRow;
 }
+
+// Limpiar instancia global de supabase al cambiar de módulo
+window.addEventListener('easySQL:moduleChange', () => {
+  window._supabaseInstance = null;
+});
 
 // Ejecutar setup y cargar tablas al cargar el módulo
 setupInsercionesListeners();

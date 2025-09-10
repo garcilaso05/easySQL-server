@@ -77,6 +77,7 @@ function mostrarMenuApp(rol) {
   const nav = document.querySelector("header nav");
   if (rol === "dev") {
     nav.innerHTML += '<button onclick="loadModule(\'modulos/crear_tabla.html\',\'modulos/crear_tabla.js\')">Crear Tablas</button>';
+    nav.innerHTML += '<button onclick="loadModule(\'modulos/crear_enumerado.html\',\'modulos/crear_enumerado.js\')">Crear enumerado</button>';
   }
   nav.innerHTML += '<button onclick="loadModule(\'modulos/inserciones.html\',\'modulos/inserciones.js\')">Inserciones</button>';
   // Cargar por defecto Inserciones o Crear Tablas según rol
