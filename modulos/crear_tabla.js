@@ -70,8 +70,8 @@ async function createTable() {
   if (!supabase) return;
 
   try {
-    const rawTableName = document.getElementById("tableName").value.trim().toUpperCase().replace(/\s+/g, "_");
-    const tableName = sanitizeIdentifier(rawTableName);
+  const rawTableName = document.getElementById("tableName").value.trim().toLowerCase().replace(/\s+/g, "_");
+  const tableName = sanitizeIdentifier(rawTableName);
     if (!tableName) {
       alert("Introduce un nombre de tabla válido.");
       return;
@@ -82,7 +82,7 @@ async function createTable() {
 
     const colElements = document.querySelectorAll(".colDef");
     for (const div of colElements) {
-      let rawName = div.querySelector(".colName").value.trim().toUpperCase().replace(/\s+/g, "_");
+      let rawName = div.querySelector(".colName").value.trim().toLowerCase().replace(/\s+/g, "_");
       if (!rawName) continue;
       let name = sanitizeIdentifier(rawName);
 
@@ -118,7 +118,14 @@ async function createTable() {
     if (error) {
       alert("Error creando tabla: " + error.message);
     } else {
-      alert("Tabla creada con éxito ✅");
+      await new Promise(res => setTimeout(res, 200)); // Espera 1 segundo
+      // Segunda llamada: aplicar RLS
+      const { error: rlsError } = await supabase.rpc("apply_rls", { table_name: tableName });
+      if (rlsError) {
+        alert("Tabla creada, pero error aplicando RLS: " + rlsError.message);
+      } else {
+        alert("Tabla creada con éxito ✅ y RLS aplicada");
+      }
     }
   } catch (err) {
     alert("Error: " + err.message);

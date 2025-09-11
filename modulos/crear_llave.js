@@ -4,25 +4,6 @@
 import JSZip from "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm";
 import CryptoJS from "https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/+esm";
 
-// Añadir usuario dinámicamente
-function addUsuario() {
-  const container = document.getElementById("usuariosContainer");
-  const div = document.createElement("div");
-  div.className = "usuarioDef";
-  div.innerHTML = `
-    <input type="text" placeholder="Usuario" class="usuarioNombre" required>
-    <input type="password" placeholder="Contraseña" class="usuarioPass" required>
-    <select class="usuarioRol">
-      <option value="dev">dev</option>
-      <option value="admin">admin</option>
-    </select>
-    <button type="button" onclick="this.parentElement.remove()">❌</button>
-  `;
-  container.appendChild(div);
-}
-
-document.getElementById("addUsuarioBtn").onclick = addUsuario;
-
 // Validar fortaleza de la clave
 function checkPasswordStrength(pw) {
   let score = 0;
@@ -65,33 +46,16 @@ document.getElementById("crearLlaveForm").onsubmit = async function(e) {
     return;
   }
 
-  // Usuarios
-  const usuarios = [];
-  document.querySelectorAll(".usuarioDef").forEach(div => {
-    const nombre = div.querySelector(".usuarioNombre").value.trim();
-    const pass = div.querySelector(".usuarioPass").value;
-    const rol = div.querySelector(".usuarioRol").value;
-    if (nombre && pass && rol) {
-      usuarios.push({ usuario: nombre, password: pass, rol });
-    }
-  });
-  if (usuarios.length === 0) {
-    progreso.textContent = "Debes añadir al menos un usuario.";
-    return;
-  }
-
   // Generar los .json
   const informacion = { nombre: nombreBD, descripcion: descripcionBD };
   const credenciales = { url: supabaseUrl, key: supabaseKey };
   const apiAI = { gemini: apiGemini };
-  const usuariosRoles = usuarios;
 
   // Comprimir con JSZip
   const zip = new JSZip();
   zip.file("informacion.json", JSON.stringify(informacion, null, 2));
   zip.file("credenciales.json", JSON.stringify(credenciales, null, 2));
   zip.file("apiAI.json", JSON.stringify(apiAI, null, 2));
-  zip.file("usuariosRoles.json", JSON.stringify(usuariosRoles, null, 2));
 
   const zipBlob = await zip.generateAsync({ type: "uint8array" });
 

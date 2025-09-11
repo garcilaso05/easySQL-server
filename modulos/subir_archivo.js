@@ -1,10 +1,10 @@
 // subir_archivo.js
 import JSZip from "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm";
 import CryptoJS from "https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/+esm";
+import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
 let credenciales = null;
-let usuariosRoles = null;
-let usuarioRol = null;
+let supabase = null;
 
 // Paso 1: Leer archivo y desencriptar
 
@@ -36,7 +36,6 @@ document.getElementById("formArchivo").onsubmit = async function(e) {
       // Descomprimir
       const zip = await JSZip.loadAsync(uint8arr);
       credenciales = JSON.parse(await zip.file("credenciales.json").async("string"));
-      usuariosRoles = JSON.parse(await zip.file("usuariosRoles.json").async("string"));
       // Mostrar login
       document.getElementById("subirArchivoBox").style.display = "none";
       document.getElementById("loginBox").style.display = "block";
@@ -48,44 +47,34 @@ document.getElementById("formArchivo").onsubmit = async function(e) {
   reader.readAsText(file);
 };
 
-// Paso 2: Login usuario
+// Paso 2: Login usuario Supabase
 
-document.getElementById("formLogin").onsubmit = function(e) {
+document.getElementById("formLogin").onsubmit = async function(e) {
   e.preventDefault();
   const progreso = document.getElementById("progresoLogin");
-  const usuario = document.getElementById("loginUsuario").value.trim();
+  const email = document.getElementById("loginEmail").value.trim();
   const pass = document.getElementById("loginPass").value;
-  const user = usuariosRoles.find(u => u.usuario === usuario && u.password === pass);
-  if (!user) {
+  // Crear instancia de Supabase con las credenciales desencriptadas
+  supabase = createClient(credenciales.url, credenciales.key);
+  // Login con email y password
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+  if (error) {
     progreso.textContent = "Usuario o contraseña incorrectos.";
     return;
   }
-  usuarioRol = user.rol;
-  // Guardar credenciales globalmente para otros módulos
-  window.getSupabaseCreds = function() {
-    return credenciales;
-  };
-  // Cambiar menú según rol
-  mostrarMenuApp(usuarioRol);
+  // Guardar instancia global para el resto de módulos
+  window._supabaseInstance = supabase;
+  // Mostrar todos los menús (sin roles)
+  mostrarMenuApp();
 };
 
-// Cambiar menú según rol
-function mostrarMenuApp(rol) {
-  // Ocultar menús iniciales
+// Mostrar todos los menús tras login
+function mostrarMenuApp() {
   document.querySelector("header nav").innerHTML = '';
-  // Crear menú app
   const nav = document.querySelector("header nav");
-  if (rol === "dev") {
-    nav.innerHTML += '<button onclick="loadModule(\'modulos/crear_tabla.html\',\'modulos/crear_tabla.js\')">Crear Tablas</button>';
-    nav.innerHTML += '<button onclick="loadModule(\'modulos/crear_enumerado.html\',\'modulos/crear_enumerado.js\')">Crear enumerado</button>';
-  }
+  nav.innerHTML += '<button onclick="loadModule(\'modulos/crear_tabla.html\',\'modulos/crear_tabla.js\')">Crear Tablas</button>';
+  nav.innerHTML += '<button onclick="loadModule(\'modulos/crear_enumerado.html\',\'modulos/crear_enumerado.js\')">Crear enumerado</button>';
   nav.innerHTML += '<button onclick="loadModule(\'modulos/inserciones.html\',\'modulos/inserciones.js\')">Inserciones</button>';
-  // Cargar por defecto Inserciones o Crear Tablas según rol
-  if (rol === "dev") {
-    window.loadModule('modulos/crear_tabla.html','modulos/crear_tabla.js');
-  } else {
-    window.loadModule('modulos/inserciones.html','modulos/inserciones.js');
-  }
-  // Ocultar login
+  window.loadModule('modulos/crear_tabla.html','modulos/crear_tabla.js');
   document.getElementById("loginBox").style.display = "none";
 }
