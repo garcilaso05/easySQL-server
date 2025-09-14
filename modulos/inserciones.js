@@ -59,18 +59,47 @@ async function cargarCamposTabla(tabla) {
   container.innerHTML = '';
   if (!tabla) return;
   await cargarEnumeradosValores();
-  // Ahora pedimos también udt_name
+  // Ahora pedimos también udt_name y fk_comment
   const { data, error } = await supabase.rpc('get_table_columns', { tabla });
   if (error || !data) {
     container.innerHTML = '<span style="color:red">Error obteniendo columnas</span>';
     return;
   }
-  data.forEach(col => {
+  for (const col of data) {
     let input;
     let label = document.createElement('label');
     label.textContent = col.column_name + ': ';
-    // ENUM: usar udt_name para detectar el tipo ENUM
-    if (col.udt_name && enumCache[col.udt_name]) {
+    // Detectar clave foránea por fk_comment
+    if (col.fk_comment && col.fk_comment.startsWith('FK -> ')) {
+      input = document.createElement('select');
+      input.className = 'fieldValue';
+      input.name = col.column_name;
+      // Primer valor: NULL
+      const optNull = document.createElement('option');
+      optNull.value = '';
+      optNull.textContent = 'NULL';
+      input.appendChild(optNull);
+      // Extraer tabla y columna referenciada
+      const refInfo = col.fk_comment.replace('FK -> ', '').split('.');
+      if (refInfo.length === 2) {
+        const [refTable, refCol] = refInfo;
+        try {
+          const { data: refRows, error: refError } = await supabase
+            .from(refTable)
+            .select(refCol);
+          if (!refError && Array.isArray(refRows)) {
+            refRows.forEach(row => {
+              const opt = document.createElement('option');
+              opt.value = row[refCol];
+              opt.textContent = row[refCol];
+              input.appendChild(opt);
+            });
+          }
+        } catch (e) {
+          // Si hay error, solo deja NULL
+        }
+      }
+    } else if (col.udt_name && enumCache[col.udt_name]) {
       input = document.createElement('select');
       input.className = 'fieldValue';
       input.name = col.column_name;
@@ -116,7 +145,7 @@ async function cargarCamposTabla(tabla) {
     label.appendChild(input);
     container.appendChild(label);
     container.appendChild(document.createElement('br'));
-  });
+  }
 }
 
 // Insertar fila usando los campos generados

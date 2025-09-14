@@ -14,15 +14,26 @@ function getSupabaseInstance() {
   return window._supabaseInstance;
 }
 
+// Obtener todas las tablas públicas existentes en la base de datos
+async function obtenerTablasExistentes() {
+  const supabase = getSupabaseInstance();
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc('get_public_tables');
+  if (error || !data) return [];
+  return data.map(row => row.table_name);
+}
+
 function addColumn() {
   const container = document.getElementById("columns");
-  // Consultar enumerados en Supabase
-  cargarEnumerados().then(enumTypes => {
+  Promise.all([cargarEnumerados(), obtenerTablasExistentes()]).then(([enumTypes, tablasExistentes]) => {
     const div = document.createElement("div");
     div.className = "colDef";
     div.innerHTML = `
       <input type="text" placeholder="NOMBRE_COLUMNA" class="colName" />
       <select class="colType"></select>
+      <span class="refTableContainer" style="display:none;">
+        <select class="refTable"></select>
+      </span>
       <label><input type="checkbox" class="notNull"> NOT NULL</label>
       <label><input type="checkbox" class="unique"> UNIQUE</label>
       <label><input type="radio" name="primaryKey" class="primary"> PRIMARY KEY</label>
@@ -36,7 +47,8 @@ function addColumn() {
       { value: "VARCHAR(25)", label: "Texto corto (25)" },
       { value: "VARCHAR(50)", label: "Texto medio (50)" },
       { value: "VARCHAR(255)", label: "Texto grande (255)" },
-      { value: "BOOLEAN", label: "Booleano" }
+      { value: "BOOLEAN", label: "Booleano" },
+      { value: "REFERENCIA", label: "Referencia a..." }
     ].forEach(opt => {
       const o = document.createElement('option');
       o.value = opt.value;
@@ -49,6 +61,22 @@ function addColumn() {
       o.value = enumName;
       o.textContent = `ENUM: ${enumName}`;
       select.appendChild(o);
+    });
+    // Rellenar tablas para referencias
+    const refSelect = div.querySelector('.refTable');
+    tablasExistentes.forEach(tabla => {
+      const o = document.createElement('option');
+      o.value = tabla;
+      o.textContent = tabla;
+      refSelect.appendChild(o);
+    });
+    // Mostrar/ocultar el selector de tabla de referencia
+    select.addEventListener('change', function() {
+      if (select.value === "REFERENCIA") {
+        div.querySelector('.refTableContainer').style.display = '';
+      } else {
+        div.querySelector('.refTableContainer').style.display = 'none';
+      }
     });
     container.appendChild(div);
     div.querySelector('.removeColBtn').onclick = function() { div.remove(); };
@@ -70,8 +98,8 @@ async function createTable() {
   if (!supabase) return;
 
   try {
-  const rawTableName = document.getElementById("tableName").value.trim().toLowerCase().replace(/\s+/g, "_");
-  const tableName = sanitizeIdentifier(rawTableName);
+    const rawTableName = document.getElementById("tableName").value.trim().toLowerCase().replace(/\s+/g, "_");
+    const tableName = sanitizeIdentifier(rawTableName);
     if (!tableName) {
       alert("Introduce un nombre de tabla válido.");
       return;
@@ -86,7 +114,7 @@ async function createTable() {
       if (!rawName) continue;
       let name = sanitizeIdentifier(rawName);
 
-      let type = div.querySelector(".colType").value; // Safe (from select)
+      let type = div.querySelector(".colType").value;
       let notNull = div.querySelector(".notNull").checked ? " NOT NULL" : "";
       let unique = div.querySelector(".unique").checked ? " UNIQUE" : "";
       let primary = div.querySelector(".primary").checked;
@@ -97,7 +125,18 @@ async function createTable() {
         primary = "";
       }
 
-      colDefs.push(`${name} ${type}${notNull}${unique}${primary}`);
+      // Si es referencia, tipo INT y añadir REFERENCES
+      if (type === "REFERENCIA") {
+        type = "INT";
+        const refTable = div.querySelector(".refTable").value;
+        if (!refTable) {
+          alert("Selecciona la tabla a la que referencia la clave foránea.");
+          return;
+        }
+        colDefs.push(`${name} ${type}${notNull}${unique}${primary} REFERENCES ${sanitizeIdentifier(refTable)}(id)`);
+      } else {
+        colDefs.push(`${name} ${type}${notNull}${unique}${primary}`);
+      }
     }
 
     if (colDefs.length === 0) {
