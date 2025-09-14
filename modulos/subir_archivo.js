@@ -111,6 +111,7 @@ function mostrarMenuApp() {
   nav.innerHTML += '<button onclick="loadModule(\'modulos/crear_tabla.html\',\'modulos/crear_tabla.js\')">Crear Tablas</button>';
   nav.innerHTML += '<button onclick="loadModule(\'modulos/crear_enumerado.html\',\'modulos/crear_enumerado.js\')">Crear enumerado</button>';
   nav.innerHTML += '<button onclick="loadModule(\'modulos/inserciones.html\',\'modulos/inserciones.js\')">Inserciones</button>';
+  nav.innerHTML += '<button onclick="loadModule(\'modulos/editar_tabla.html\',\'modulos/editar_tabla.js\')">Editar tabla</button>';
   window.loadModule('modulos/crear_tabla.html','modulos/crear_tabla.js');
   document.getElementById("loginBox").style.display = "none";
 }
