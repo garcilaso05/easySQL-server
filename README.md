@@ -39,3 +39,18 @@ python3 -m http.server 8000
 ```
 
 Luego abre tu navegador en [http://localhost:8000](http://localhost:8000)
+
+## Control y monitorización de licencias con Firebase
+
+Para mejorar la seguridad y el control de uso, la aplicación utiliza un servidor en **Firebase Firestore** que gestiona las licencias de acceso:
+- Cada vez que se crea una llave `.easySQL`, se registra en Firestore un documento con los datos públicos (anon, activo) y una subcolección privada con los datos sensibles y accesos.
+- Antes de crear una nueva llave, el sistema comprueba que no exista ya una licencia con la misma API Key (anon), para evitar que usuarios que han sido bloqueados vuelvan a crear otra llave `.easySQL` para la misma base de datos.
+- Al acceder a la app, se valida que la licencia esté activa en Firestore antes de permitir el acceso.
+- Si es necesario, el administrador puede desactivar una licencia (campo `activo`), bloqueando el acceso a la app para ese usuario.
+- Cada vez que un usuario accede, se registra un log de acceso en la subcolección privada, permitiendo monitorizar el uso de la app.
+- Las reglas de Firestore están diseñadas para que solo los campos públicos sean accesibles y ningún dato sensible pueda ser leído desde el cliente, incluso aunque la API Key de Firebase esté expuesta.
+- Este sistema permite también tener un backup seguro de las contraseñas y credenciales, y controlar cuántos usuarios utilizan la aplicación.
+
+**Resumen del flujo:**
+- Al crear una llave, se registra la licencia en Firestore y se almacena la información sensible de forma privada.
+- Al acceder, se valida la licencia y se monitoriza el acceso, garantizando un control seguro y centralizado.
