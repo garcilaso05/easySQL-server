@@ -48,7 +48,7 @@ function addColumn() {
       { value: "VARCHAR(50)", label: "Texto medio (50)" },
       { value: "VARCHAR(255)", label: "Texto grande (255)" },
       { value: "BOOLEAN", label: "Booleano" },
-      { value: "REFERENCIA", label: "Referencia a..." }
+      { value: "REFERENCIA", label: "Referencia a un/a..." }
     ].forEach(opt => {
       const o = document.createElement('option');
       o.value = opt.value;
@@ -72,7 +72,7 @@ function addColumn() {
     });
     // Mostrar/ocultar el selector de tabla de referencia
     select.addEventListener('change', function() {
-      if (select.value === "REFERENCIA") {
+      if (select.value === "REFERENCIA" || select.value === "REFERENCIA_NM") {
         div.querySelector('.refTableContainer').style.display = '';
       } else {
         div.querySelector('.refTableContainer').style.display = 'none';
@@ -107,6 +107,7 @@ async function createTable() {
 
     const colDefs = [];
     let hasPrimary = false;
+    const nmRelations = [];
 
     const colElements = document.querySelectorAll(".colDef");
     for (const div of colElements) {
@@ -125,7 +126,6 @@ async function createTable() {
         primary = "";
       }
 
-      // Si es referencia, tipo INT y añadir REFERENCES
       if (type === "REFERENCIA") {
         type = "INT";
         const refTable = div.querySelector(".refTable").value;
@@ -134,6 +134,15 @@ async function createTable() {
           return;
         }
         colDefs.push(`${name} ${type}${notNull}${unique}${primary} REFERENCES ${sanitizeIdentifier(refTable)}(id)`);
+      } else if (type === "REFERENCIA_NM") {
+        // Guardar relación n:m para crear tabla intermedia
+        const refTable = div.querySelector(".refTable").value;
+        if (!refTable) {
+          alert("Selecciona la tabla para la relación n:m.");
+          return;
+        }
+        nmRelations.push({ tabla1: tableName, tabla2: sanitizeIdentifier(refTable) });
+        // No añadir campo a la tabla principal
       } else {
         colDefs.push(`${name} ${type}${notNull}${unique}${primary}`);
       }
@@ -149,22 +158,43 @@ async function createTable() {
       return;
     }
 
-    const sql = `CREATE TABLE ${tableName} (${colDefs.join(", ")});`;
-    document.getElementById("preview").textContent = sql;
+    // Crear tabla principal
+    const sqls = [`CREATE TABLE ${tableName} (${colDefs.join(", ")});`];
 
-    const { error } = await supabase.rpc("exec_create_table", { query: sql });
+    // Crear tablas intermedias para relaciones n:m
+    for (const rel of nmRelations) {
+      // Ordenar nombres para evitar duplicados
+      const [t1, t2] = [rel.tabla1, rel.tabla2].sort();
+      const relTable = `relacion_${t1}_${t2}`;
+      sqls.push(
+        `CREATE TABLE ${relTable} (` +
+        `${t1}_id INT, ` +
+        `${t2}_id INT, ` +
+        `PRIMARY KEY (${t1}_id, ${t2}_id), ` +
+        `FOREIGN KEY (${t1}_id) REFERENCES ${t1}(id) ON DELETE CASCADE, ` +
+        `FOREIGN KEY (${t2}_id) REFERENCES ${t2}(id) ON DELETE CASCADE` +
+        `);`
+      );
+    }
 
-    if (error) {
-      alert("Error creando tabla: " + error.message);
-    } else {
-      await new Promise(res => setTimeout(res, 200)); // Espera 1 segundo
-      // Segunda llamada: aplicar RLS
-      const { error: rlsError } = await supabase.rpc("apply_rls", { table_name: tableName });
-      if (rlsError) {
-        alert("Tabla creada, pero error aplicando RLS: " + rlsError.message);
-      } else {
-        alert("Tabla creada con éxito ✅ y RLS aplicada");
+    document.getElementById("preview").textContent = sqls.join("\n\n");
+
+    // Ejecutar todas las queries
+    for (const sql of sqls) {
+      const { error } = await supabase.rpc("exec_create_table", { query: sql });
+      if (error) {
+        alert("Error creando tabla: " + error.message);
+        return;
       }
+    }
+
+    await new Promise(res => setTimeout(res, 200)); // Espera 1 segundo
+    // Segunda llamada: aplicar RLS solo a la tabla principal
+    const { error: rlsError } = await supabase.rpc("apply_rls", { table_name: tableName });
+    if (rlsError) {
+      alert("Tabla creada, pero error aplicando RLS: " + rlsError.message);
+    } else {
+      alert("Tabla(s) creada(s) con éxito ✅ y RLS aplicada a la principal");
     }
   } catch (err) {
     alert("Error: " + err.message);
