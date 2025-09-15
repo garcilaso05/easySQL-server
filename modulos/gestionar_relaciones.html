@@ -12,3 +12,24 @@
   <div id="relacionMsg"></div>
 </div>
 <!-- Aquí puedes añadir más apartados en el futuro -->
+
+<!-- Nueva sección: Gestionar relaciones existentes mediante tabla intermedia -->
+<div style="margin-top: 24px; border-top: 1px solid #ddd; padding-top: 16px;">
+  <h3>Gestionar relaciones existentes n:m</h3>
+  <label>Tabla intermedia:
+    <select id="relJoinTable"></select>
+  </label>
+  <button id="relSwapBtn" disabled>Intercambiar columnas</button>
+  <div style="display: flex; gap: 24px; margin-top: 12px;">
+    <div style="flex: 1; min-width: 200px;">
+      <div id="relLeftList" style="max-height: 260px; overflow: auto; border: 1px solid #ccc; padding: 8px;"></div>
+    </div>
+    <div style="flex: 1; min-width: 200px;">
+      <div id="relRightList" style="max-height: 260px; overflow: auto; border: 1px solid #ccc; padding: 8px;"></div>
+    </div>
+  </div>
+  <div style="margin-top: 12px;">
+    <button id="relCreateRelsBtn" disabled>Crear relaciones</button>
+  </div>
+  <div id="relMgmtStatus" style="margin-top: 8px; min-height: 18px;"></div>
+</div>
