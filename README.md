@@ -31,86 +31,14 @@ Este archivo está comprimido (usando **JSZip**) y encriptado (usando **CryptoJS
 - La aplicación está dividida en módulos HTML/JS independientes para cada menú y funcionalidad (crear tabla, inserciones, enumerados, etc.).
 - Los módulos se cargan dinámicamente según la navegación, mejorando la experiencia de usuario y la mantenibilidad del código.
 
-## Despliegue y configuración
+## Pruebas locales y CORS
+Debido a la modularidad (los módulos HTML/JS se cargan dinámicamente), si abres el archivo `index.html` directamente en tu navegador (file://), verás un error CORS y los módulos no se cargarán. Para evitar esto, ejecuta en la raíz del proyecto:
 
-### Desarrollo local
-Debido a la modularidad (los módulos HTML/JS se cargan dinámicamente) y al uso de CDN externos para dependencias, si abres el archivo `index.html` directamente en tu navegador (file://), verás errores CORS y los módulos no se cargarán.
-
-#### Opción 1: Servidor Python simple (recomendado para desarrollo)
-```bash
+```
 python3 -m http.server 8000
 ```
+
 Luego abre tu navegador en [http://localhost:8000](http://localhost:8000)
-
-#### Opción 2: Servidor con headers CORS personalizados
-Si necesitas control total sobre los headers CORS para permitir módulos externos, crea un archivo `server.py`:
-
-```python
-#!/usr/bin/env python3
-import http.server
-import socketserver
-from urllib.parse import urlparse
-
-class CORSRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def end_headers(self):
-        self.send_header('Cross-Origin-Embedder-Policy', 'require-corp')
-        self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        super().end_headers()
-
-PORT = 8000
-with socketserver.TCPServer(("", PORT), CORSRequestHandler) as httpd:
-    print(f"Servidor corriendo en http://localhost:{PORT}")
-    httpd.serve_forever()
-```
-
-Ejecutar con: `python3 server.py`
-
-#### Opción 3: Usar un navegador con políticas relajadas (solo para desarrollo)
-```bash
-# Chrome/Chromium (Linux/Mac)
-google-chrome --disable-web-security --user-data-dir=/tmp/chrome-dev --allow-running-insecure-content
-
-# Firefox con about:config
-# security.fileuri.strict_origin_policy = false
-```
-
-**⚠️ Nota importante:** Las opciones 2 y 3 son solo para desarrollo. En producción, todos los recursos deben servirse desde el mismo dominio o configurar CORS apropiadamente en el servidor.
-
-### Producción en servidor web
-
-#### GitHub Pages / Servidor estático
-La aplicación está optimizada para funcionar en GitHub Pages y otros servidores estáticos. En estos entornos:
-
-1. **Los archivos .easySQL no se pueden desencriptar automáticamente** debido a limitaciones de CORS y políticas de seguridad.
-2. **Solución:** Se proporciona un formulario manual donde introduces las credenciales directamente:
-   - Supabase URL: `https://tu-proyecto.supabase.co`
-   - API Key (anon): Tu clave pública de Supabase
-
-#### Servidor Apache/Nginx
-Si tienes control sobre el servidor, puedes:
-
-1. **Apache:** El archivo `.htaccess` incluido configura los headers CORS necesarios.
-2. **Nginx:** Añade esta configuración:
-```nginx
-location / {
-    add_header Cross-Origin-Embedder-Policy "credentialless";
-    add_header Cross-Origin-Opener-Policy "same-origin";
-    add_header Access-Control-Allow-Origin "*";
-    add_header Access-Control-Allow-Methods "GET, POST, OPTIONS";
-    add_header Access-Control-Allow-Headers "Content-Type, Authorization";
-}
-```
-
-#### Heroku / Vercel / Netlify
-Estas plataformas suelen tener limitaciones similares a GitHub Pages. Usa el formulario manual de credenciales.
-
-### Limitaciones en servidores web estáticos
-- **Sin desencriptación automática:** Debes introducir manualmente las credenciales de Supabase.
-- **Sin validación de licencias Firebase:** La validación está deshabilitada por defecto.
-- **Funcionalidad completa:** Todas las demás funciones (crear tablas, inserciones, relaciones) funcionan normalmente.
 
 ## Control y monitorización de licencias con Firebase
 
@@ -122,8 +50,6 @@ Para mejorar la seguridad y el control de uso, la aplicación utiliza un servido
 - Cada vez que un usuario accede, se registra un log de acceso en la subcolección privada, permitiendo monitorizar el uso de la app.
 - Las reglas de Firestore están diseñadas para que solo los campos públicos sean accesibles y ningún dato sensible pueda ser leído desde el cliente, incluso aunque la API Key de Firebase esté expuesta.
 - Este sistema permite también tener un backup seguro de las contraseñas y credenciales, y controlar cuántos usuarios utilizan la aplicación.
-
-**Nota:** En servidores web estáticos, la validación de licencias está deshabilitada por defecto para evitar errores de CORS.
 
 **Resumen del flujo:**
 - Al crear una llave, se registra la licencia en Firestore y se almacena la información sensible de forma privada.
