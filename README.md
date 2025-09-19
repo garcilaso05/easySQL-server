@@ -32,13 +32,51 @@ Este archivo está comprimido (usando **JSZip**) y encriptado (usando **CryptoJS
 - Los módulos se cargan dinámicamente según la navegación, mejorando la experiencia de usuario y la mantenibilidad del código.
 
 ## Pruebas locales y CORS
-Debido a la modularidad (los módulos HTML/JS se cargan dinámicamente), si abres el archivo `index.html` directamente en tu navegador (file://), verás un error CORS y los módulos no se cargarán. Para evitar esto, ejecuta en la raíz del proyecto:
 
-```
+Debido a la modularidad (los módulos HTML/JS se cargan dinámicamente) y al uso de CDN externos para dependencias, si abres el archivo `index.html` directamente en tu navegador (file://), verás errores CORS y los módulos no se cargarán.
+
+### Opción 1: Servidor Python simple (recomendado para desarrollo)
+```bash
 python3 -m http.server 8000
 ```
-
 Luego abre tu navegador en [http://localhost:8000](http://localhost:8000)
+
+### Opción 2: Servidor con headers CORS personalizados
+Si necesitas control total sobre los headers CORS para permitir módulos externos, crea un archivo `server.py`:
+
+```python
+#!/usr/bin/env python3
+import http.server
+import socketserver
+from urllib.parse import urlparse
+
+class CORSRequestHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header('Cross-Origin-Embedder-Policy', 'require-corp')
+        self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        super().end_headers()
+
+PORT = 8000
+with socketserver.TCPServer(("", PORT), CORSRequestHandler) as httpd:
+    print(f"Servidor corriendo en http://localhost:{PORT}")
+    httpd.serve_forever()
+```
+
+Ejecutar con: `python3 server.py`
+
+### Opción 3: Usar un navegador con políticas relajadas (solo para desarrollo)
+```bash
+# Chrome/Chromium (Linux/Mac)
+google-chrome --disable-web-security --user-data-dir=/tmp/chrome-dev --allow-running-insecure-content
+
+# Firefox con about:config
+# security.fileuri.strict_origin_policy = false
+```
+
+**⚠️ Nota importante:** Las opciones 2 y 3 son solo para desarrollo. En producción, todos los recursos deben servirse desde el mismo dominio o configurar CORS apropiadamente en el servidor.
 
 ## Control y monitorización de licencias con Firebase
 
