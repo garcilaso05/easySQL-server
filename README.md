@@ -28,7 +28,14 @@ Este archivo está comprimido (usando **JSZip**) y encriptado (usando **CryptoJS
 - Se han añadido controles y sanitización de identificadores para evitar SQL injection en todas las operaciones dinámicas.
 
 ## Modularidad y arquitectura
-- La aplicación está dividida en módulos HTML/JS independientes para cada menú y funcionalidad (crear tabla, inserciones, enumerados, etc.).
+- La aplicación está dividida en módulos HTML/JS independientes para cada menú y funcionalidad:
+  - **Crear tablas:** Diseñar y crear nuevas tablas con campos personalizados
+  - **Crear enumerados:** Gestionar tipos ENUM para validación de datos
+  - **Inserciones:** Añadir nuevos registros a las tablas existentes
+  - **Visualizar datos:** Ver todos los datos de una tabla en formato tipo Excel con tooltips para claves foráneas
+  - **Generar gráficos:** Crear gráficos de pastel con distribución porcentual de valores de cualquier campo
+  - **Editar tabla:** Modificar estructura de tablas existentes
+  - **Gestionar relaciones:** Configurar relaciones entre tablas (claves foráneas)
 - Los módulos se cargan dinámicamente según la navegación, mejorando la experiencia de usuario y la mantenibilidad del código.
 
 ## Pruebas locales y CORS

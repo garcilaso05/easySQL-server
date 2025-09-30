@@ -1,0 +1,41 @@
+<h2>Generar Gráficos</h2>
+
+<div>
+  <label for="tableSelectGraph">Selecciona una tabla:</label>
+  <select id="tableSelectGraph">
+    <option value="">Selecciona una tabla...</option>
+  </select>
+</div>
+
+<div style="margin-top: 15px;">
+  <label for="fieldSelectGraph">Selecciona un campo:</label>
+  <select id="fieldSelectGraph" disabled>
+    <option value="">Primero selecciona una tabla...</option>
+  </select>
+</div>
+
+<div style="margin-top: 15px;">
+  <label for="chartTypeSelect">Tipo de gráfico:</label>
+  <select id="chartTypeSelect">
+    <option value="pie">Circular (Pie)</option>
+    <option value="doughnut">Dona (Doughnut)</option>
+    <option value="bar">Barras verticales</option>
+    <option value="horizontalBar">Barras horizontales</option>
+    <option value="line">Líneas</option>
+    <option value="scatter">Puntos (Scatter)</option>
+    <option value="polarArea">Área polar</option>
+    <option value="radar">Radar</option>
+  </select>
+</div>
+
+<div style="margin-top: 15px;">
+  <button id="generateGraphBtn" disabled>Generar Gráfico</button>
+</div>
+
+<div id="graphContainer" style="margin-top: 20px;">
+  <!-- Aquí se mostrará el gráfico -->
+</div>
+
+<div id="statsContainer" style="margin-top: 20px;">
+  <!-- Aquí se mostrarán las estadísticas -->
+</div>

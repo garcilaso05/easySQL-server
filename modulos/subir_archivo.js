@@ -112,6 +112,7 @@ function mostrarMenuApp() {
   nav.innerHTML += '<button onclick="loadModule(\'modulos/crear_enumerado.html\',\'modulos/crear_enumerado.js\')">Crear enumerado</button>';
   nav.innerHTML += '<button onclick="loadModule(\'modulos/inserciones.html\',\'modulos/inserciones.js\')">Inserciones</button>';
   nav.innerHTML += '<button onclick="loadModule(\'modulos/visualizar_datos.html\',\'modulos/visualizar_datos.js\')">Visualizar datos</button>';
+  nav.innerHTML += '<button onclick="loadModule(\'modulos/generar_graficos.html\',\'modulos/generar_graficos.js\')">Generar gráficos</button>';
   nav.innerHTML += '<button onclick="loadModule(\'modulos/editar_tabla.html\',\'modulos/editar_tabla.js\')">Editar tabla</button>';
   nav.innerHTML += '<button onclick="loadModule(\'modulos/gestionar_relaciones.html\',\'modulos/gestionar_relaciones.js\')">Gestionar relaciones</button>';
   window.loadModule('modulos/crear_tabla.html','modulos/crear_tabla.js');
