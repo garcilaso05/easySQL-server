@@ -390,34 +390,35 @@ function mostrarEstadisticas(datos, tabla, campo, tipoGrafico) {
   
   // Obtener nombre descriptivo del tipo de gráfico
   const tiposGrafico = {
-    'pie': 'Circular (Pie)',
-    'doughnut': 'Dona (Doughnut)', 
-    'bar': 'Barras verticales',
-    'horizontalBar': 'Barras horizontales',
-    'line': 'Líneas',
-    'scatter': 'Puntos (Scatter)',
-    'polarArea': 'Área polar',
-    'radar': 'Radar'
+    'pie': '📊 Circular (Pie)',
+    'doughnut': '🍩 Dona (Doughnut)', 
+    'bar': '📈 Barras verticales',
+    'horizontalBar': '📉 Barras horizontales',
+    'line': '📈 Líneas',
+    'scatter': '⚫ Puntos (Scatter)',
+    'polarArea': '🎯 Área polar',
+    'radar': '🕸️ Radar'
   };
   
   let html = `
-    <h3>Estadísticas detalladas</h3>
-    <p><strong>Tabla:</strong> ${tabla}</p>
-    <p><strong>Campo:</strong> ${campo}</p>
-    <p><strong>Tipo de gráfico:</strong> ${tiposGrafico[tipoGrafico] || tipoGrafico}</p>
-    <p><strong>Total de registros:</strong> ${datos.totalRegistros}</p>
-    <p><strong>Valores únicos:</strong> ${datos.labels.length}</p>
-    
-    <h4>Distribución:</h4>
-    <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
-      <thead>
-        <tr style="background-color: #f5f5f5;">
-          <th>Valor</th>
-          <th>Cantidad</th>
-          <th>Porcentaje</th>
-        </tr>
-      </thead>
-      <tbody>
+    <div class="stats-container">
+      <h3>Estadísticas detalladas</h3>
+      <p><strong>Tabla:</strong> ${tabla}</p>
+      <p><strong>Campo:</strong> ${campo}</p>
+      <p><strong>Tipo de gráfico:</strong> ${tiposGrafico[tipoGrafico] || tipoGrafico}</p>
+      <p><strong>Total de registros:</strong> ${datos.totalRegistros}</p>
+      <p><strong>Valores únicos:</strong> ${datos.labels.length}</p>
+      
+      <h4>Distribución:</h4>
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Valor</th>
+            <th>Cantidad</th>
+            <th>Porcentaje</th>
+          </tr>
+        </thead>
+        <tbody>
   `;
   
   // Ordenar por cantidad descendente
@@ -435,8 +436,9 @@ function mostrarEstadisticas(datos, tabla, campo, tipoGrafico) {
   });
   
   html += `
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
   `;
   
   container.innerHTML = html;
@@ -493,8 +495,10 @@ function setupGraficosListeners() {
       // Crear canvas si no existe
       if (!document.getElementById('chartCanvas')) {
         graphContainer.innerHTML = `
-          <div style="width: 100%; height: 400px; position: relative;">
-            <canvas id="chartCanvas"></canvas>
+          <div class="chart-container">
+            <div style="width: 100%; height: 400px; position: relative;">
+              <canvas id="chartCanvas"></canvas>
+            </div>
           </div>
         `;
       }

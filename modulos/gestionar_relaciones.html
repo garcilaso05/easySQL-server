@@ -1,35 +1,54 @@
 <!-- Modulo: Gestionar Relaciones -->
 <h2>Gestionar relaciones n:m</h2>
-<div>
+
+<div class="content-container">
   <h3>Crear relación</h3>
-  <label>Tabla 1:
-    <select id="relTable1"></select>
-  </label>
-  <label>Tabla 2:
-    <select id="relTable2"></select>
-  </label>
-  <button id="crearRelacionBtn">Crear relación</button>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="relTable1">Tabla 1:</label>
+      <select id="relTable1">
+        <option value="">Selecciona tabla...</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="relTable2">Tabla 2:</label>
+      <select id="relTable2">
+        <option value="">Selecciona tabla...</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <button id="crearRelacionBtn" class="btn-primary">Crear relación</button>
+    </div>
+  </div>
   <div id="relacionMsg"></div>
 </div>
-<!-- Aquí puedes añadir más apartados en el futuro -->
 
 <!-- Nueva sección: Gestionar relaciones existentes mediante tabla intermedia -->
-<div style="margin-top: 24px; border-top: 1px solid #ddd; padding-top: 16px;">
+<div class="content-container">
   <h3>Gestionar relaciones existentes n:m</h3>
-  <label>Tabla intermedia:
-    <select id="relJoinTable"></select>
-  </label>
-  <button id="relSwapBtn" disabled>Intercambiar columnas</button>
-  <div style="display: flex; gap: 24px; margin-top: 12px;">
-    <div style="flex: 1; min-width: 200px;">
-      <div id="relLeftList" style="max-height: 260px; overflow: auto; border: 1px solid #ccc; padding: 8px;"></div>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="relJoinTable">Tabla intermedia:</label>
+      <select id="relJoinTable">
+        <option value="">Selecciona tabla intermedia...</option>
+      </select>
     </div>
-    <div style="flex: 1; min-width: 200px;">
-      <div id="relRightList" style="max-height: 260px; overflow: auto; border: 1px solid #ccc; padding: 8px;"></div>
+    <div class="form-group">
+      <button id="relSwapBtn" class="btn-secondary" disabled>Intercambiar columnas</button>
     </div>
   </div>
-  <div style="margin-top: 12px;">
-    <button id="relCreateRelsBtn" disabled>Crear relaciones</button>
+  
+  <div style="display: flex; gap: 24px; margin-top: 20px;">
+    <div class="content-container" style="flex: 1; min-width: 200px;">
+      <div id="relLeftList" style="max-height: 260px; overflow: auto;"></div>
+    </div>
+    <div class="content-container" style="flex: 1; min-width: 200px;">
+      <div id="relRightList" style="max-height: 260px; overflow: auto;"></div>
+    </div>
   </div>
-  <div id="relMgmtStatus" style="margin-top: 8px; min-height: 18px;"></div>
+  
+  <div class="form-group">
+    <button id="relCreateRelsBtn" class="btn-primary" disabled>Crear relaciones</button>
+  </div>
+  <div id="relMgmtStatus"></div>
 </div>

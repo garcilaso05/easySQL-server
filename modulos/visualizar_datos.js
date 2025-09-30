@@ -122,12 +122,12 @@ function crearTablaHTML(datos, columnas) {
   
   const headers = Object.keys(datos[0]);
   
-  let html = '<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">';
+  let html = '<table class="data-table">';
   
   // Cabeceras
   html += '<thead><tr>';
   headers.forEach(header => {
-    html += `<th style="background-color: #f5f5f5; text-align: left;">${header}</th>`;
+    html += `<th>${header}</th>`;
   });
   html += '</tr></thead>';
   
@@ -144,8 +144,7 @@ function crearTablaHTML(datos, columnas) {
         html += `<td>
           <span class="foreign-key-cell" 
                 data-fk-comment="${columna.fk_comment}" 
-                data-fk-value="${valor}"
-                style="cursor: pointer; color: blue; text-decoration: underline;">
+                data-fk-value="${valor}">
             ${valor}
           </span>
         </td>`;
@@ -207,6 +206,7 @@ function setupVisualizarDatosListeners() {
   tableSelect.onchange = (e) => {
     loadDataBtn.disabled = !e.target.value;
     dataContainer.innerHTML = '';
+    dataContainer.style.display = 'none';
   };
   
   // Cargar datos al hacer clic en el botón
@@ -231,6 +231,7 @@ function setupVisualizarDatosListeners() {
       // Crear y mostrar la tabla
       const tablaHTML = crearTablaHTML(datos, columnas);
       dataContainer.innerHTML = tablaHTML;
+      dataContainer.style.display = 'block';
       
     } catch (error) {
       console.error('Error cargando datos:', error);

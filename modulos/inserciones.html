@@ -1,13 +1,21 @@
 <h2>Inserciones</h2>
 
-<div>
-  <label>Tabla destino:</label>
-  <select id="insertTableSelect"><option value="">Selecciona una tabla...</option></select>
+<div class="form-group">
+  <label for="insertTableSelect">Tabla destino:</label>
+  <select id="insertTableSelect">
+    <option value="">Selecciona una tabla...</option>
+  </select>
 </div>
 
-<div id="insertFormContainer"></div>
-<br>
-<button id="insertRowBtn">Insertar fila</button>
+<div id="insertFormContainer" class="content-container" style="display: none;">
+  <!-- Aquí se cargarán los campos de la tabla -->
+</div>
 
-<h3>SQL generado</h3>
-<pre id="insertPreview"></pre>
+<div class="form-group">
+  <button id="insertRowBtn" class="btn-primary" disabled>Insertar fila</button>
+</div>
+
+<div class="content-container">
+  <h3>SQL generado</h3>
+  <pre id="insertPreview"></pre>
+</div>

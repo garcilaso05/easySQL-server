@@ -205,10 +205,20 @@ async function insertRow() {
 // Asignar listeners tras cargar el módulo
 function setupInsercionesListeners() {
   const select = document.getElementById("insertTableSelect");
-  if (select) {
-    select.onchange = () => cargarCamposTabla(select.value);
-  }
   const insertBtn = document.getElementById("insertRowBtn");
+  const container = document.getElementById("insertFormContainer");
+  
+  if (select) {
+    select.onchange = () => {
+      cargarCamposTabla(select.value);
+      insertBtn.disabled = !select.value;
+      if (select.value) {
+        container.style.display = 'block';
+      } else {
+        container.style.display = 'none';
+      }
+    };
+  }
   if (insertBtn) insertBtn.onclick = insertRow;
 }
 
