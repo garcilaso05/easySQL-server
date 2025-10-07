@@ -76,7 +76,19 @@ async function crearRelacion() {
   if (error) {
     mostrarMsg('Error creando relación: ' + error.message, 'red');
   } else {
-    mostrarMsg('Relación creada con éxito ✅', 'green');
+    // Aplicar automáticamente RLS a la tabla intermedia creada
+    try {
+      const { error: rlsError } = await supabase.rpc('apply_rls', { table_name: relTable });
+      if (rlsError) {
+        console.warn('Error aplicando RLS a tabla intermedia:', rlsError.message);
+        mostrarMsg('Relación creada ✅ (Advertencia: No se pudo aplicar RLS automáticamente)', 'orange');
+      } else {
+        mostrarMsg('Relación creada con éxito ✅ (RLS aplicado automáticamente)', 'green');
+      }
+    } catch (rlsError) {
+      console.warn('Error aplicando RLS:', rlsError);
+      mostrarMsg('Relación creada ✅ (Advertencia: No se pudo aplicar RLS automáticamente)', 'orange');
+    }
     await cargarTablasEnSelects();
   }
 }
@@ -84,7 +96,7 @@ async function crearRelacion() {
 function mostrarMsg(msg, color) {
   const el = document.getElementById('relacionMsg');
   el.textContent = msg;
-  el.style.color = color;
+  el.style.color = color === 'orange' ? '#ff9800' : color;
   setTimeout(() => { el.textContent = ''; }, 4000);
 }
 
@@ -103,6 +115,7 @@ async function cargarTablasEnSelects() {
 }
 
 document.getElementById('crearRelacionBtn').onclick = crearRelacion;
+document.getElementById('applyRlsAllBtn').onclick = aplicarRlsATodas;
 cargarTablasEnSelects();
 
 // --- NUEVA SECCIÓN: Gestión de relaciones n:m desde tabla intermedia ---
@@ -582,3 +595,38 @@ function initRelacionManagerUI() {
 
 // Inicializar nueva sección
 initRelacionManagerUI();
+
+// Función para aplicar RLS a todas las tablas
+async function aplicarRlsATodas() {
+    const msgDiv = document.getElementById('rlsAllMsg');
+    const btn = document.getElementById('applyRlsAllBtn');
+    
+    try {
+        btn.disabled = true;
+        btn.textContent = 'Aplicando RLS...';
+        msgDiv.innerHTML = '<p style="color: blue;">Aplicando políticas RLS a todas las tablas...</p>';
+        
+        // Llamar a la función apply_rls_all_tables
+        const { data, error } = await supabase
+            .rpc('apply_rls_all_tables');
+        
+        if (error) {
+            console.error('Error:', error);
+            msgDiv.innerHTML = `<p style="color: red;">Error al aplicar RLS: ${error.message}</p>`;
+        } else {
+            console.log('RLS aplicado exitosamente:', data);
+            if (data && data.length > 0) {
+                msgDiv.innerHTML = `<p style="color: green;">Políticas RLS aplicadas exitosamente a ${data.length} tabla(s):</p>
+                                  <ul>${data.map(tabla => `<li>${tabla}</li>`).join('')}</ul>`;
+            } else {
+                msgDiv.innerHTML = `<p style="color: green;">Todas las tablas ya tienen políticas RLS configuradas.</p>`;
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        msgDiv.innerHTML = `<p style="color: red;">Error inesperado: ${error.message}</p>`;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Aplicar RLS a todas las tablas';
+    }
+}

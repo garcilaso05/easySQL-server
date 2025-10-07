@@ -31,29 +31,98 @@ async function cargarTablas() {
 async function cargarCamposTabla(tabla) {
   const supabase = getSupabaseInstance();
   if (!supabase) return;
+  
   const container = document.getElementById("editFieldsContainer");
+  const addFieldBtn = document.getElementById("addFieldBtn");
+  
+  // Limpiar contenedor
   container.innerHTML = '';
-  if (!tabla) return;
-  const { data, error } = await supabase.rpc('get_table_columns', { tabla });
-  if (error || !data) {
-    container.innerHTML = '<span style="color:red">Error obteniendo columnas</span>';
+  container.style.display = 'none';
+  addFieldBtn.disabled = true;
+  
+  if (!tabla) {
+    console.log('No hay tabla seleccionada');
     return;
   }
-  data.forEach(col => {
-    const div = document.createElement('div');
-    div.className = 'editFieldRow';
-    div.innerHTML = `
-      <input type="text" value="${col.column_name}" class="editFieldName" data-original="${col.column_name}" />
-      <span style="color:#888">(${col.data_type}${col.character_maximum_length ? `(${col.character_maximum_length})` : ''})</span>
-      <button type="button" class="renameFieldBtn">Renombrar</button>
-      <button type="button" class="deleteFieldBtn">Borrar</button>
-    `;
-    if (col.is_primary) {
-      div.querySelector('.deleteFieldBtn').disabled = true;
-      div.querySelector('.deleteFieldBtn').title = 'No se puede borrar la PK';
+  
+  console.log('Cargando columnas para tabla:', tabla);
+  
+  try {
+    // Usar la función get_table_columns existente
+    const { data, error } = await supabase.rpc('get_table_columns', { tabla });
+    
+    if (error) {
+      console.error('Error con get_table_columns:', error);
+      throw new Error(`Error obteniendo columnas: ${error.message}`);
     }
-    container.appendChild(div);
-  });
+    
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="color: orange;">No se encontraron columnas para esta tabla.</p>';
+      container.style.display = 'block';
+      return;
+    }
+    
+    console.log('Columnas obtenidas:', data);
+    
+    // Crear elementos para cada columna
+    data.forEach(col => {
+      const div = document.createElement('div');
+      div.className = 'editFieldRow';
+      div.style.marginBottom = '10px';
+      div.style.padding = '10px';
+      div.style.border = '1px solid #ddd';
+      div.style.borderRadius = '4px';
+      
+      const columnName = col.column_name;
+      const dataType = col.data_type;
+      const maxLength = col.character_maximum_length;
+      const fkComment = col.fk_comment || '';
+      const isPrimary = col.is_primary;
+      
+      // Mostrar tipo con longitud si existe
+      let typeDisplay = dataType;
+      if (maxLength) {
+        typeDisplay += `(${maxLength})`;
+      }
+      
+      // Agregar comentario de FK si existe
+      if (fkComment) {
+        typeDisplay += ` - ${fkComment}`;
+      }
+      
+      div.innerHTML = `
+        <div style="margin-bottom: 8px;">
+          <input type="text" value="${columnName}" class="editFieldName" data-original="${columnName}" 
+                 style="margin-right: 10px; padding: 4px; width: 150px;" />
+          <span style="color:#888; margin-right: 10px; font-size: 12px;">${typeDisplay}</span>
+          <button type="button" class="renameFieldBtn btn-secondary" style="margin-right: 5px; padding: 4px 8px;">Renombrar</button>
+          <button type="button" class="deleteFieldBtn btn-primary" style="background-color: #f44336; padding: 4px 8px;">Borrar</button>
+          ${isPrimary ? '<span style="color: #4CAF50; font-weight: bold; margin-left: 10px;">PK</span>' : ''}
+          ${fkComment ? '<span style="color: #2196F3; font-weight: bold; margin-left: 5px;">FK</span>' : ''}
+        </div>
+      `;
+      
+      if (isPrimary) {
+        const deleteBtn = div.querySelector('.deleteFieldBtn');
+        deleteBtn.disabled = true;
+        deleteBtn.title = 'No se puede borrar la clave primaria';
+        deleteBtn.style.opacity = '0.5';
+      }
+      
+      container.appendChild(div);
+    });
+    
+    // Mostrar contenedor y habilitar botón
+    container.style.display = 'block';
+    addFieldBtn.disabled = false;
+    
+    console.log('Columnas cargadas exitosamente');
+    
+  } catch (err) {
+    console.error('Error cargando columnas:', err);
+    container.innerHTML = `<p style="color:red;">Error obteniendo columnas: ${err.message}</p>`;
+    container.style.display = 'block';
+  }
 }
 
 async function renombrarCampo(tabla, oldName, newName) {
@@ -206,7 +275,10 @@ function mostrarMsg(msg, color) {
 function setupEditarTablaListeners() {
   cargarTablas();
   const select = document.getElementById("editTableSelect");
-  select.onchange = () => cargarCamposTabla(select.value);
+  select.onchange = () => {
+    console.log('Tabla seleccionada:', select.value);
+    cargarCamposTabla(select.value);
+  };
   document.getElementById("addFieldBtn").onclick = () => {
     const tabla = select.value;
     if (tabla) anadirCampo(tabla);
